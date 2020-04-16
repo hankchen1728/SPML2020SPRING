@@ -22,7 +22,7 @@ __all_models__ = [
 def config_net(net_name="VGG"):
     assert net_name in __all_models__, "Unimplemented architecture"
     if net_name == "VGG":
-        return models.vgg("VGG19")
+        return models.VGG("VGG19")
     elif net_name == "ResNet":
         return models.ResNet18()
     elif net_name == "ResNeXt":
@@ -33,6 +33,11 @@ def config_net(net_name="VGG"):
         return models.DPN92()
     elif net_name == "EfficientNet":
         return models.EfficientNetB0()
+
+
+def _save_makedirs(dir_path):
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
 
 
 def main(args):
@@ -57,10 +62,10 @@ def main(args):
 
     # Data loader
     print("Constructing data loader ...")
-    data_dir = "./data"
+    data_dir = args.data_dir
     train_loader, valid_loader = data_loader.get_train_valid_loader(
         data_dir=data_dir,
-        batch_size=64,
+        batch_size=128,
         augment=True,
         random_seed=20,
         valid_size=0.1,
@@ -78,14 +83,15 @@ def main(args):
                }
 
     ckpt_dir = os.path.join(args.ckpt_dir, args.net_name)
+    _save_makedirs(ckpt_dir)
     best_val_acc = 0.0
     for epoch in range(epochs):
         epoch_start_time = time.time()
-        net.train()
         train_loss = 0
         correct = 0
         total = 0
         # Training
+        net.train()
         for batch_idx, (inputs, targets) in enumerate(train_loader):
             inputs, targets = inputs.to(device), targets.to(device)
             optimizer.zero_grad()
@@ -111,6 +117,7 @@ def main(args):
         val_loss = 0
         val_correct = 0
         val_total = 0
+        net.eval()
         for batch_idx, (inputs, targets) in enumerate(valid_loader):
             inputs, targets = inputs.to(device), targets.to(device)
             outputs = net(inputs)
@@ -146,10 +153,13 @@ def main(args):
                 'val_acc': val_acc,
                 'epoch': epoch,
             }
-            torch.save(state, os.path.join(ckpt_dir, "model_{:03}.pth"))
+            torch.save(
+                state,
+                os.path.join(ckpt_dir, "model_{:03}.pth".format(epoch+1))
+                )
 
     # Save training history
-    with open(os.path.join(ckpt_dir, "history.json")) as opf:
+    with open(os.path.join(ckpt_dir, "history.json"), 'w') as opf:
         json.dump(history, opf)
 
     # end
@@ -166,9 +176,14 @@ if __name__ == "__main__":
             help="CUDA visible gpus")
 
     parser.add_argument(
-            "--cpkt_dir",
+            "--ckpt_dir",
             type=str,
             default="./checkpoint")
+
+    parser.add_argument(
+            "--data_dir",
+            type=str,
+            default="../data")
 
     parser.add_argument(
             "--lr",
@@ -188,3 +203,5 @@ if __name__ == "__main__":
             help="training epochs")
 
     args = parser.parse_args()
+
+    main(args)
