@@ -15,7 +15,7 @@ import data_loader
 
 
 __all_models__ = [
-    "VGG", "ResNet", "DenseNet", "ResNeXt", "DPN", "EfficientNet"
+    "VGG", "ResNet", "DenseNet", "ResNeXt", "MobileNet", "DPN", "EfficientNet"
     ]
 
 
@@ -27,6 +27,8 @@ def config_net(net_name="VGG"):
         return models.ResNet18()
     elif net_name == "ResNeXt":
         return models.ResNeXt29_2x64d()
+    elif net_name == "MobileNet":
+        return models.MobileNetV2()
     elif net_name == "DenseNet":
         return models.DenseNet121()
     elif net_name == "DPN":

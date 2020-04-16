@@ -158,7 +158,7 @@ def main(args):
 
     # Call attacker
     attacker = FGSM_Attacker(net, eval_loader)
-    adv_imgs = attacker.attack(epsilon=0.1, decode=True)
+    adv_imgs = attacker.attack(epsilon=0.05, decode=True)
 
     # Save adv images
     for i_class in range(len(cifar10_class.classes)):
